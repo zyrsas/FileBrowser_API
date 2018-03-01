@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.shortcuts import render_to_response
 from filer.models import File, Folder
-from celery_tasktigger.decorator import tigger_task
+from django.contrib.sites.models import Site
 
 
 @api_view(['POST', ])
@@ -69,7 +69,7 @@ def SignIn(request):
         try:
             if User.objects.filter(name=request.GET.get('user'),
                                    password=request.GET.get('pass')).count() == 0:
-                return Response({"Null": "Null"}, )
+                return Response({"Null": "Null"})
             else:
                 if request.GET.get('regID') != None:
                     reg_ID = User.objects.filter(name=request.GET.get('user'), password=request.GET.get('pass'))
@@ -80,8 +80,6 @@ def SignIn(request):
                         print("Update")
                 data_for_json = User.objects.filter(name=request.GET.get('user')).values('id',
                                                                                          'name',
-                                                                                         'departmen_id',
-                                                                                         'departmen__name',
                                                                                          'access'
                                                                                          )
                 tmp = list(data_for_json)[0]
@@ -93,170 +91,6 @@ def SignIn(request):
             return Response({"Null": "Null"})
         except:
             return Response({"Null": "Null"})
-
-
-@api_view(['POST', ])
-def GetDocFromDepartment(request):
-    if request.method == "POST":
-        try:
-            """user_id = request.GET.get('user_id')
-
-            dep_id = User.objects.filter(id=user_id).values('departmen_id')
-            dep_id = dict(list(dep_id)[0])
-            dep_id = dep_id['departmen_id']
-            print("Department = " + str(dep_id))
-
-            tmp = Department.objects.filter(id=dep_id).values(
-                                                                'documents__name',
-                                                                'documents__extension',
-                                                                'documents__id',
-                                                                'documents__file',
-                                                                'documents__dateOfModification'
-                                                                )
-            json_list = []
-            for i in tmp:
-                #fix for size file
-                path = MEDIA_ROOT + "/" + i['documents__file']
-                size_file = size(os.path.getsize(path), system=alternative)
-                i['size'] = str(size_file)
-
-                # url for file
-                base_url = "{0}://{1}{2}{3}".format(request.scheme, request.get_host(), MEDIA_URL, i['documents__file'])
-                i['documents__file'] = base_url
-
-                # fix date
-                date_to_str = str(i['documents__dateOfModification'])
-                date_to_str = date_to_str.replace('T', " ").replace("+00:00", "")
-                last_ind = date_to_str.rfind(':')
-                date_to_str = date_to_str[:last_ind]
-                i['documents__dateOfModification'] = date_to_str
-
-                # add status for doc
-                userToDoc = UserToDoc.objects.filter(user=user_id, doc=i['documents__id']).values('status')
-                print(userToDoc)
-                if userToDoc:
-                    userToDoc = dict(list(userToDoc)[0])
-                    print(userToDoc['status'])
-                    i['status'] = userToDoc['status']
-
-                json_list.append(i)"""
-
-            return Response({"Null": "Null"})
-        except KeyError:
-            return Response({"Null": "Null"})
-        except ValueError:
-            return Response({"Null": "Null"})
-        except :
-            return Response({"Null": "Null"})
-
-
-@api_view(['POST', ])
-def CountStatusDocForUser(request):
-    count = 0
-    if request.method == "POST":
-        try:
-            """user_id = request.GET.get('user_id')
-
-            dep_id = User.objects.filter(id=user_id).values('departmen_id')
-            dep_id = dict(list(dep_id)[0])
-            dep_id = dep_id['departmen_id']
-            print("Department = " + str(dep_id))
-
-            tmp = Department.objects.filter(id=dep_id).values(
-                                                              'documents__id',
-                                                              )
-            for i in tmp:
-                # add status for doc
-                userToDoc = UserToDoc.objects.filter(user=user_id, doc=i['documents__id'], status=False).count()
-                print(userToDoc)
-                if userToDoc > 0:
-                    count += 1"""
-
-            return Response({"Count": count})
-        except KeyError:
-            return Response({"Null": "Null"})
-        except ValueError:
-            return Response({"Null": "Null"})
-        except:
-            return Response({"Null": "Null"})
-
-
-@api_view(['POST', ])
-def StatusDocForUser(request):
-    if request.method == "POST":
-        try:
-            """user_id = request.GET.get('user_id')
-
-            dep_id = User.objects.filter(id=user_id, ).values('departmen_id')
-            dep_id = dict(list(dep_id)[0])
-            dep_id = dep_id['departmen_id']
-            print("Department = " + str(dep_id))
-
-            tmp = Department.objects.filter(id=dep_id).values('documents__name',
-                                                              'documents__extension',
-                                                              'documents__id',
-                                                              'documents__file',
-                                                              'documents__dateOfModification')
-
-            json_list = []
-            for i in tmp:
-                # fix for size file
-                path = MEDIA_ROOT + "/" + i['documents__file']
-                size_file = size(os.path.getsize(path), system=alternative)
-                i['size'] = str(size_file)
-
-                # url for file
-                base_url = "{0}://{1}{2}{3}".format(request.scheme, request.get_host(), MEDIA_URL, i['documents__file'])
-                i['documents__file'] = base_url
-
-                # fix date
-                date_to_str = str(i['documents__dateOfModification'])
-                date_to_str = date_to_str.replace('T', " ").replace("+00:00", "")
-                last_ind = date_to_str.rfind(':')
-                date_to_str = date_to_str[:last_ind]
-                i['documents__dateOfModification'] = date_to_str
-
-                # add status for doc
-                userToDoc = UserToDoc.objects.filter(user=user_id, doc=i['documents__id'], status=False).values('status')
-                print(userToDoc)
-                if userToDoc:
-                    userToDoc = dict(list(userToDoc)[0])
-                    print(userToDoc['status'])
-                    i['status'] = userToDoc['status']
-                    print(i['status'])
-                    if i['status'] == False:
-                        json_list.append(i)"""
-
-            return Response({"Null": "Null"})
-        except KeyError:
-            return Response({"Null": "Null"})
-        except ValueError:
-            return Response({"Null": "Null"})
-        except:
-            return Response({"Null": "Null"})
-
-
-@api_view(['POST', ])
-def ChangeStatusDocForUser(request):
-    if request.method == "POST":
-        try:
-            """user_id = request.GET.get('user_id')
-            print(user_id)
-
-            userToDoc = UserToDoc.objects.filter(user=user_id, status=False)
-            print(list(userToDoc))
-            for j in userToDoc:
-                j.status = True
-                j.save()
-                print("Update")"""
-
-            return Response({"result": True})
-        except KeyError:
-            return Response({"result": False})
-        except ValueError:
-            return Response({"result": False})
-        except:
-            return Response({"result": False})
 
 
 @api_view(['POST', ])
@@ -311,20 +145,6 @@ def ShowLicence(reqest):
     return HttpResponse(text_licence)
 
 
-from Documents.form import UploadForm
-from django.views.generic.edit import FormView
-
-class UploadView(FormView):
-    template_name = 'form.html'
-    form_class = UploadForm
-    success_url = '/admin/Documents/document/'
-
-    """def form_valid(self, form):
-        for each in form.cleaned_data['Documents']:
-            Document.objects.create(file=each)
-        return super(UploadView, self).form_valid(form)"""
-
-
 @api_view(['POST', ])
 def DeleteUserForTESTING(request):
     if request.method == "POST":
@@ -337,31 +157,6 @@ def DeleteUserForTESTING(request):
             return Response({"Null": "Null"})
         except:
             return Response({"Null": "Null"})
-
-
-@api_view(['POST', ])
-def UpdateCoordinates(request):
-    if request.method == "POST":
-        try:
-            user_id = request.GET.get('user_id')
-
-            users = User.objects.filter(id=user_id)
-            print(list(users))
-            for user in users:
-                user.longitude = request.GET.get('longitude')
-                user.latitude = request.GET.get('latitude')
-                user.date = request.GET.get('date')
-                user.save()
-                print("Update")
-
-            return Response({"result": True})
-        except KeyError:
-            return Response({"result": False})
-        except ValueError:
-            return Response({"result": False})
-        except:
-            return Response({"result": False})
-
 
 
 @api_view(['POST', ])
@@ -402,14 +197,32 @@ def GetFiles(request):
 def GetRootFolders(request):
     if request.method == "POST":
         try:
-
-
-
             folder = []
             for f in Folder.objects.all():
                 if f.parent == None:
                     folder.append(f.name)
+                print("Folder name = ", f.name)
+                print("File count = ", f.file_count)
+                print("Children count = ", f.children_count)
+                print("ID = ", f.id)
+                print("ID_Parent", f.parent_id)
+                print("Parent = ", f.parent)
+                print("Created", f.created_at)
+                print("Icons", f.icons)
+                print("\n")
 
+
+                """
+                print("Folder name = ", f.name)
+                print("File count = ", f.file_count)
+                print("Children count = ", f.children_count)
+                print("ID = ", f.id)
+                print("ID_Parent", f.parent_id)
+                print("Parent = ", f.parent)
+                print("Created", f.created_at)
+                print("Icons", f.icons)
+                print("Files: ")
+                """
             return Response({"folders": folder})
         except KeyError:
             return Response({"result": False})
@@ -419,9 +232,30 @@ def GetRootFolders(request):
             return Response({"result": False})
 
 
-
-def TEST(request):
-    print("dsadasdas")
+@api_view(['POST', ])
+def GetAllFromFolder(request):
+    if request.method == "POST":
+        try:
+            folder = Folder.objects.filter(id=2)
+            json = []
+            for item in folder[0].children.all():
+                print(item.name)
+            for item in folder[0].files.all():
+                file_dic = {}
+                file_dic["name"] = item.label
+                file_dic["size"] = item.size
+                file_dic["url"] = "{0}://{1}{2}".format(request.scheme, request.get_host(), str(item.url))
+                file_dic["id"] = item.id
+                file_dic["extension"] = item.extension
+                file_dic["date"] = item.modified_at
+                json.append(file_dic)
+            return Response(json)
+        except KeyError:
+            return Response({"result": False})
+        except ValueError:
+            return Response({"result": False})
+        except:
+            return Response({"result": False})
 
 
 class UserList(generics.ListCreateAPIView):
@@ -431,23 +265,5 @@ class UserList(generics.ListCreateAPIView):
 
 def contac(request):
     return TemplateResponse(request, 'contact.html')
-
-
-def map(request):
-    import googlemaps
-
-    gmaps = googlemaps.Client(key='AIzaSyBabF55JYfzyqCJ6__Pi33EtW84ldRDN8g')
-
-    # Look up an address with reverse geocoding
-    address_list = []
-    users = User.objects.all()
-    for user in list(users):
-        reverse_geocode_result = gmaps.reverse_geocode((user.latitude, user.longitude))
-        address = str((list(reverse_geocode_result)[0]['formatted_address']))
-        address_list.append(address)
-    print(address_list)
-    ziped_add = zip(users, address_list)
-    return render_to_response('map_templ.html', {"users": address_list, "address": ziped_add})
-
 
 

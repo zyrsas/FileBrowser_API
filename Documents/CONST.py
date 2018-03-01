@@ -1,5 +1,4 @@
 
 
-class COUNTER_FOR_UPLOAD(object):
-
+class COUNTER_FOR_UPLOAD():
     COUNT = 0
