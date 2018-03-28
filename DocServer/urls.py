@@ -12,11 +12,10 @@ urlpatterns = [
     url(r'^licence/$', views.ShowLicence),
     url(r'^refresh_token/$', views.RefreshTOKEN),
     url(r'^clear_token/$', views.ClearTOKEN),
-    url(r'^user_test/$', views.DeleteUserForTESTING),
     url(r'^contact/', views.contac),
     url(r'^filer/', include('filer.urls')),
-    url(r'^files/$', views.GetFiles),
-    url(r'^root_folders/$', views.GetRootFolders),
+    url(r'^get_root/$', views.GetRootFolders),
     url(r'^get_folder/$', views.GetAllFromFolder),
+    url(r'^find_root/$', views.FindByRoot),
+    url(r'^find_folder/$', views.FindByFolder),
 ] + static(MEDIA_URL, document_root=MEDIA_ROOT)
-

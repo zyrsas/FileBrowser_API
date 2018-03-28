@@ -18,3 +18,6 @@ class User(models.Model):
 
 # END User!!! =================================
 
+
+class CountUploadFile(models.Model):
+    count = models.IntegerField(max_length=200)

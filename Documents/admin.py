@@ -1,6 +1,7 @@
-from Documents.models import User
+from Documents.models import User, CountUploadFile
 from django.contrib import admin
 from django.contrib.sites.models import Site
+from django.contrib.auth.models import Group
 
 
 class TeachingUserModelAdmin(admin.ModelAdmin):
@@ -10,9 +11,11 @@ class TeachingUserModelAdmin(admin.ModelAdmin):
     readonly_fields = ['regID', ]
 
 
+
 admin.site.unregister(Site)
 admin.site.register(User, TeachingUserModelAdmin)
-
+admin.site.register(CountUploadFile)
+admin.site.unregister(Group)
 
 # Admin change logo text
 admin.site.site_header = "Directory NNR"
