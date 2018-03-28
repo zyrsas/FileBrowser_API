@@ -293,32 +293,61 @@ def FindByRoot(request):
         except:
             return Response({"result": False})
 
-json = []
+
 
 @api_view(['POST', ])
 def FindByFolder(request):
-
-    def find_in_folder(id):
+    json = []
+    def find_in_folder(id, name):
         for item in Folder.objects.filter(id=id):
-            for files in item.files.filter(original_filename__icontains="screen"):
-                print(files.label)
-                print(files.folder)
-            sub_folders = item.children.all()
-            for i in sub_folders:
-                #print(i.name)
+            for files in item.files.filter(original_filename__icontains=name):
+                file_dic = {}
+                file_dic["name"] = files.label
+                file_dic["size"] = size(files.size, system=alternative)
+                file_dic["url"] = "{0}://{1}{2}".format(request.scheme, request.get_host(), str(files.url))
+                file_dic["id"] = files.id
+                file_dic["extension"] = files.extension
 
-                find_in_folder(i.id)
+                # fix date
+                date_to_str = str(files.modified_at)
+                date_to_str = date_to_str.replace('T', " ").replace("+00:00", "")
+                last_ind = date_to_str.rfind(':')
+                file_dic["date"] = date_to_str[:last_ind]
+
+                file_dic["isFolder"] = False
+                file_dic["parent_id"] = files.folder_id
+
+                file_dic["file_count"] = 0
+                file_dic["children_count"] = 0
+                json.append(file_dic)
+
+            sub_folders = item.children.all()
+            for sub_folder in sub_folders:
+                if name in sub_folder.name:
+                    file_dic = {}
+                    file_dic["name"] = sub_folder.name
+                    file_dic["id"] = sub_folder.id
+                    file_dic["file_count"] = sub_folder.file_count
+                    file_dic["url"] = ""
+                    file_dic["children_count"] = sub_folder.children_count
+                    # fix date
+                    date_to_str = str(sub_folder.modified_at)
+                    date_to_str = date_to_str.replace('T', " ").replace("+00:00", "")
+                    last_ind = date_to_str.rfind(':')
+                    file_dic["date"] = date_to_str[:last_ind]
+
+                    file_dic["isFolder"] = True
+                    file_dic["parent_id"] = sub_folder.parent_id
+
+                    file_dic["extension"] = ""
+                    file_dic["size"] = ""
+                    json.append(file_dic)
+                find_in_folder(sub_folder.id, name)
 
     if request.method == "POST":
         try:
-            root_folder = Folder.objects.filter(id=request.GET.get('id'))
-            find_in_folder(request.GET.get('id'))
-            """for item in root_folder:
-                it = item.children.all()
-                for i in it:
-                    i.children"""
-
-            return Response({})
+            find_in_folder(request.GET.get('id'), request.GET.get('name'))
+            return Response(json)
         except KeyError:
             return Response({"result": False})
         except ValueError:
