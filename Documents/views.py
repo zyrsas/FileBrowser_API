@@ -244,7 +244,7 @@ def FindByRoot(request):
         try:
             json = []
             for item in Folder.objects.filter(name__icontains=str(request.GET.get('name'))):
-                print(item.children_count)
+                #print(item.children_count)
                 file_dic = {}
                 file_dic["name"] = item.name
                 file_dic["id"] = item.id
@@ -265,13 +265,13 @@ def FindByRoot(request):
                 json.append(file_dic)
 
             for item in File.objects.filter(original_filename__icontains=str(request.GET.get('name'))).values().all():
-                print(item)
+                #print(item)
                 file_dic = {}
                 file_dic["name"] = item['original_filename']
                 file_dic["id"] = item['id']
                 file_dic["size"] = size(item['_file_size'], system=alternative)
                 file_dic["url"] = "{0}://{1}/media/{2}".format(request.scheme, request.get_host(), str(item['file']))
-                #file_dic["extension"] = item.extension
+                file_dic["extension"] = file_dic["name"].split(".")[-1]
 
                 # fix date
                 date_to_str = str(item['uploaded_at'])
